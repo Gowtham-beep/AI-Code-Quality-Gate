@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/db/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum AnalysisStatus {
+  PENDING
+  QUEUED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum Severity {
+  INFO
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+enum QualityGateResult {
+  PASS
+  FAIL
+  SKIPPED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Repository {
+  id            String   @id @default(cuid())
+  githubId      Int      @unique
+  owner         String
+  name          String
+  fullName      String   @unique
+  defaultBranch String   @default("main")
+  installationId Int?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  analyses AnalysisJob[]
+
+  @@index([owner, name])
+  @@map("repositories")
+}
+
+model AnalysisJob {
+  id           String          @id @default(cuid())
+  repositoryId String
+  prNumber     Int
+  prTitle      String
+  commitSha    String
+  baseSha      String
+  headBranch   String
+  baseBranch   String
+  status       AnalysisStatus  @default(PENDING)
+  gateResult   QualityGateResult?
+  triggeredBy  String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  errorMessage String?
+  metadata     Json?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  repository Repository     @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  findings   Finding[]
+  report     AnalysisReport?
+
+  @@index([repositoryId, prNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("analysis_jobs")
+}
+
+model Finding {
+  id           String   @id @default(cuid())
+  analysisJobId String
+  filePath     String
+  lineStart    Int?
+  lineEnd      Int?
+  severity     Severity
+  ruleId       String
+  message      String
+  suggestion   String?
+  category     String?
+  createdAt    DateTime @default(now())
+
+  analysisJob AnalysisJob @relation(fields: [analysisJobId], references: [id], onDelete: Cascade)
+
+  @@index([analysisJobId])
+  @@index([severity])
+  @@map("findings")
+}
+
+model AnalysisReport {
+  id             String            @id @default(cuid())
+  analysisJobId  String            @unique
+  summary        String
+  totalFindings  Int               @default(0)
+  criticalCount  Int               @default(0)
+  errorCount     Int               @default(0)
+  warningCount   Int               @default(0)
+  infoCount      Int               @default(0)
+  score          Float?
+  gateResult     QualityGateResult
+  rawOutput      Json?
+  createdAt      DateTime          @default(now())
+
+  analysisJob AnalysisJob @relation(fields: [analysisJobId], references: [id], onDelete: Cascade)
+
+  @@map("analysis_reports")
+}
+
+model WebhookEvent {
+  id          String   @id @default(cuid())
+  eventType   String
+  deliveryId  String   @unique
+  payload     Json
+  processed   Boolean  @default(false)
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([eventType])
+  @@index([processed])
+  @@map("webhook_events")
+}

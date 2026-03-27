@@ -1,0 +1,14 @@
+import { FastifyReply, FastifyRequest } from 'fastify';
+
+export function notFoundHandler(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): void {
+  void reply.status(404).send({
+    success: false,
+    error: {
+      code: 'NOT_FOUND',
+      message: `Route ${request.method} ${request.url} not found`,
+    },
+  });
+}
