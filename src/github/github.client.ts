@@ -1,54 +1,47 @@
+/**
+ * github.client.ts — façade over the GitHub service layer.
+ *
+ * External callers (workers, analysis pipeline) should import from here.
+ * This module re-exports the service function under the stable client API
+ * and keeps stubs for functions not yet implemented.
+ */
+
+export { getPullRequestDiff } from './github.service';
+export type { PullRequestFile, RepoRef } from './github.service.types';
+
 import { logger } from '../utils/logger';
 import { ExternalServiceError } from '../utils/errors';
-import type { PullRequestDiff } from '../analysis/analysis.types';
+
+// ─── Stubs for upcoming features ─────────────────────────────────────────────
 
 /**
- * GitHub API client stub.
- * Will use @octokit/rest or a GitHub App installation token.
- * All methods are stubs — implementation goes here in Phase 2.
+ * Post an inline review comment on a PR.
+ * @stub — will be implemented with the reporting phase.
  */
-export const githubClient = {
-  /**
-   * Fetch the diff / changed files for a pull request.
-   */
-  async getPullRequestDiff(
-    _owner: string,
-    _repo: string,
-    _prNumber: number,
-    _installationId?: number,
-  ): Promise<PullRequestDiff> {
-    // TODO: implement via Octokit
-    logger.debug('githubClient.getPullRequestDiff — stub');
-    throw new ExternalServiceError('GitHub', 'getPullRequestDiff not yet implemented');
-  },
+export async function postReviewComment(
+  _owner: string,
+  _repo: string,
+  _prNumber: number,
+  _body: string,
+  _commitSha: string,
+  _installationId?: number,
+): Promise<void> {
+  logger.debug('githubClient.postReviewComment — not yet implemented');
+  throw new ExternalServiceError('GitHub', 'postReviewComment not yet implemented');
+}
 
-  /**
-   * Post a review comment on a pull request.
-   */
-  async postReviewComment(
-    _owner: string,
-    _repo: string,
-    _prNumber: number,
-    _body: string,
-    _commitSha: string,
-    _installationId?: number,
-  ): Promise<void> {
-    logger.debug('githubClient.postReviewComment — stub');
-    throw new ExternalServiceError('GitHub', 'postReviewComment not yet implemented');
-  },
-
-  /**
-   * Update the commit status check for a pull request.
-   */
-  async updateCommitStatus(
-    _owner: string,
-    _repo: string,
-    _sha: string,
-    _state: 'pending' | 'success' | 'failure' | 'error',
-    _description: string,
-    _installationId?: number,
-  ): Promise<void> {
-    logger.debug('githubClient.updateCommitStatus — stub');
-    throw new ExternalServiceError('GitHub', 'updateCommitStatus not yet implemented');
-  },
-};
+/**
+ * Set a commit status check on a PR's head SHA.
+ * @stub — will be implemented with the reporting phase.
+ */
+export async function updateCommitStatus(
+  _owner: string,
+  _repo: string,
+  _sha: string,
+  _state: 'pending' | 'success' | 'failure' | 'error',
+  _description: string,
+  _installationId?: number,
+): Promise<void> {
+  logger.debug('githubClient.updateCommitStatus — not yet implemented');
+  throw new ExternalServiceError('GitHub', 'updateCommitStatus not yet implemented');
+}
