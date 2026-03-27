@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { logger } from './logger';
+import { closeAnalysisJobsQueue } from '../queue/producer';
 
 const SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -23,6 +24,8 @@ export function gracefulShutdown(app: FastifyInstance): void {
       timer.unref();
 
       try {
+        // Drain BullMQ queue connections before stopping the HTTP server
+        await closeAnalysisJobsQueue();
         await app.close();
         logger.info('Server closed successfully');
         clearTimeout(timer);
